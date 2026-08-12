@@ -6,8 +6,9 @@ WORKDIR /app
 # Ativar pnpm
 RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
-# Copiar manifesto de dependências e lockfile do pnpm
+# Copiar manifesto de dependências, lockfile e patches
 COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
 
 # Instalar dependências de forma ultra-rápida e eficiente em memória
 RUN pnpm install --frozen-lockfile
