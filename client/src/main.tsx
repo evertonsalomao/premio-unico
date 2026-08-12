@@ -8,6 +8,8 @@ import App from "./App";
 import { startLogin } from "./const";
 import "./index.css";
 
+import { toast } from "sonner";
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
@@ -33,6 +35,8 @@ queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
     redirectToLoginIfUnauthorized(error);
+    const message = error instanceof Error ? error.message : "Ocorreu um erro no servidor.";
+    toast.error(message);
     console.error("[API Mutation Error]", error);
   }
 });

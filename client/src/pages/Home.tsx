@@ -68,10 +68,19 @@ function AuthScreen() {
   const [recoveryQuestion, setRecoveryQuestion] = useState("");
   const [form, setForm] = useState({ username: "", password: "", name: "", storeUnit: "", email: "", securityQuestion: "", securityAnswer: "", newPassword: "" });
   const utils = trpc.useUtils();
-  const login = trpc.auth.login.useMutation({ onSuccess: async () => { await utils.auth.me.invalidate(); toast.success("Acesso liberado."); } });
-  const register = trpc.auth.register.useMutation({ onSuccess: async ({ firstUserIsMaster }) => { await utils.auth.me.invalidate(); toast.success(firstUserIsMaster ? "Cadastro criado. Você é o primeiro Master." : "Cadastro criado como Vendedor."); } });
+  const login = trpc.auth.login.useMutation({
+    onSuccess: async () => { await utils.auth.me.invalidate(); toast.success("Acesso liberado."); },
+    onError: err => toast.error(err.message),
+  });
+  const register = trpc.auth.register.useMutation({
+    onSuccess: async ({ firstUserIsMaster }) => { await utils.auth.me.invalidate(); toast.success(firstUserIsMaster ? "Cadastro criado. Você é o primeiro Master." : "Cadastro criado como Vendedor."); },
+    onError: err => toast.error(err.message),
+  });
   const recovery = trpc.auth.recoveryQuestion.useQuery({ username: recoveryUser.trim().toLowerCase() }, { enabled: false, retry: false });
-  const reset = trpc.auth.resetPassword.useMutation({ onSuccess: async () => { await utils.auth.me.invalidate(); toast.success("Senha redefinida com sucesso."); setMode("login"); setRecoveryStep(1); } });
+  const reset = trpc.auth.resetPassword.useMutation({
+    onSuccess: async () => { await utils.auth.me.invalidate(); toast.success("Senha redefinida com sucesso."); setMode("login"); setRecoveryStep(1); },
+    onError: err => toast.error(err.message),
+  });
 
   const setField = (field: keyof typeof form, value: string) => setForm(previous => ({ ...previous, [field]: value }));
   const goRecover = async () => {
