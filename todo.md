@@ -1,0 +1,79 @@
+# Projeto TODO - FOLHA DE PRÊMIO ÓTICAS ÚNICO
+
+- [x] Criar o arquivo `todo.md` e registrar o plano de execução
+- [x] Analisar os arquivos `PREMIODELENTESATUALIZADO.xlsx` e `FOLHA_PREMIOATUALIZADA.docx`
+- [x] Atualizar o esquema do banco de dados em `drizzle/schema.ts` para usuários, pergunta de segurança, lentes, premiações e lançamentos de vendas
+- [x] Criar migração Drizzle e aplicar via `webdev_execute_sql`
+- [x] Implementar rotas de autenticação própria (login, registro com pergunta-chave, recuperação de senha, sessão com JWT/cookie customizado)
+- [x] Implementar procedimentos tRPC para gerenciamento de usuários e controle de acesso Master vs Vendedor
+- [x] Implementar procedimentos para CRUD de lentes e prêmios (exclusivo Master)
+- [x] Implementar tela e procedimentos de lançamento ágil de vendas com cálculo automático de prêmio
+- [x] Implementar painéis de resumo de premiação com filtros diário, semanal e mensal por vendedor e geral
+- [x] Implementar exportação de relatórios em Excel (XLSX) e PDF / impressão
+- [x] Implementar link de compartilhamento formatado para o WhatsApp
+- [x] Criar seed inicial com dados dos arquivos fornecidos (`PREMIODELENTESATUALIZADO.xlsx` e `FOLHA_PREMIOATUALIZADA.docx`)
+- [x] Desenvolver a interface visual com estética industrial moderna (tons de cinza, blocos retangulares, tipografia brutalista refinada)
+- [x] Criar testes unitários (Vitest) para autenticação, cálculo de prêmio e relatórios
+- [x] Verificar funcionamento completo, salvar checkpoint e entregar o projeto
+- [x] Corrigir erro de inserção ao criar o primeiro acesso, exibido no cadastro de usuário
+- [x] Validar o fluxo de registro e login após a correção
+- [x] Incorporar o logotipo fornecido da Óticas Único na tela de acesso e no sistema
+- [x] Aplicar a paleta amarela, vermelha e branca da marca na interface
+- [x] Validar a nova identidade visual em desktop e celular e salvar checkpoint
+- [x] Validar visualmente as telas autenticadas do painel após a atualização da identidade visual
+- [x] Salvar checkpoint final após as alterações de branding
+- [x] Adicionar funcionalidade de edição de lançamentos existentes com restrição por perfil
+- [x] Ampliar procedimentos e tela de relatórios para o Master consultar todos os lançamentos por usuário e período
+- [x] Validar testes e salvar checkpoint final
+- [x] Adicionar teste automatizado do mutation sales.update para vendedor próprio, outro vendedor e Master
+- [x] Permitir corrigir também data e loja no formulário de edição de lançamento
+- [x] Salvar checkpoint após a validação final desta entrega
+- [x] Corrigir o acesso à edição de vendas já lançadas
+- [x] Exibir botão ALTERAR claramente com um clique para abrir o lançamento
+- [x] Validar abertura, salvamento e permissões da edição
+- [x] Salvar checkpoint da correção
+- [x] Salvar checkpoint definitivo com a correção do botão ALTERAR
+- [x] Corrigir botão ALTERAR que aparece no mobile mas não abre o formulário
+- [x] Validar abertura por toque, edição e salvamento no mobile
+- [x] Salvar checkpoint da correção mobile
+- [x] Substituir a abertura inline por uma janela de edição mobile com botão ALTERAR funcional
+- [x] Validar a nova janela de edição e atualizar o checkpoint
+- [x] Adicionar o campo observation na tabela de vendas e migração Drizzle
+- [x] Implementar procedimento tRPC para exclusão de vendas com verificação de permissão (vendedor próprio ou Master)
+- [x] Adicionar o campo Observação no formulário de lançamento e na janela de edição
+- [x] Incluir o botão EXCLUIR ao lado de ALTERAR com confirmação
+- [x] Validar testes unitários e salvar checkpoint final
+- [x] Corrigir lançamentos de vendedores que não aparecem no resumo nem somam os valores
+- [x] Validar criação de venda, consulta por vendedor, período e totais acumulados
+- [x] Salvar checkpoint da correção do resumo por vendedor
+- [x] Adicionar nome da vendedora e loja no cabeçalho dos relatórios PDF e Excel
+- [x] Validar exportação com o nome do vendedor selecionado ou da própria conta
+- [x] Salvar checkpoint da melhoria de relatórios
+- [x] Remover truncamento e abreviação do nome da lente nos relatórios PDF e Excel
+- [x] Validar que o nome completo da lente seja exibido exatamente como na tabela de cadastro
+- [x] Salvar checkpoint da correção dos nomes de lentes nos relatórios
+- [x] Garantir que linhas de vendas longas no PDF acomodem o nome completo da lente sem corte
+- [x] Salvar checkpoint definitivo com os nomes completos de lentes nos relatórios
+- [x] Adicionar coluna storeUnit na tabela de usuários e migração Drizzle
+- [x] Atualizar rotas de cadastro/gestão de usuários para exigir storeUnit
+- [x] Bloquear o campo Loja nos formulários de lançamento e edição, preenchendo-o automaticamente com a unidade do vendedor
+- [x] Validar testes e salvar checkpoint final
+- [x] Salvar checkpoint final após a implementação da Unidade e da Loja automática
+- [x] Restringir consultas de vendas e relatórios do usuário comum à própria unidade
+- [x] Ocultar filtros de outras lojas e manter exportações limitadas à unidade do usuário
+- [x] Testar isolamento por unidade, acesso Master e salvar checkpoint
+- [x] Ocultar na interface do usuário comum qualquer filtro ou seleção de outra loja
+- [x] Validar visualmente que usuário comum vê e exporta apenas a própria unidade
+- [x] Validar em sessão autenticada de vendedor que não há filtros de outras lojas
+- [x] Confirmar exportações PDF e Excel limitadas à unidade do vendedor
+- [x] Salvar checkpoint após o isolamento por unidade
+- [x] Salvar checkpoint final do isolamento de usuários por unidade
+- [x] Adicionar opção "Personalizado" no seletor de período com campos de data inicial e final
+- [x] Atualizar consultas tRPC e exportações PDF/Excel/WhatsApp para respeitar as datas personalizadas
+- [x] Testar consulta por dias quebrados e salvar checkpoint final
+- [x] Adicionar teste automatizado cobrindo relatório com período personalizado
+- [x] Salvar checkpoint após validar o período personalizado
+- [x] Salvar checkpoint após validar o período personalizado
+- [x] Adicionar botão PESQUISAR ao lado do intervalo personalizado para execução manual
+- [x] Validar comportamento do botão Pesquisar e salvar checkpoint final
+- [x] Validar em sessão autenticada o fluxo do período personalizado com o botão PESQUISAR

@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1786502530618,
+      "tag": "0000_glossy_purifiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1786502773467,
+      "tag": "0001_burly_alex_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786502814756,
+      "tag": "0002_equal_nicolaos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786524773428,
+      "tag": "0004_add_observation",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1786528515569,
+      "tag": "0004_short_hiroim",
+      "breakpoints": true
+    }
+  ]
+}
