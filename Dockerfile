@@ -3,17 +3,20 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copiar manifesto de dependências
-COPY package*.json ./
+# Ativar pnpm
+RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
-# Instalar todas as dependências (incluindo devDependencies para build)
-RUN npm install --legacy-peer-deps
+# Copiar manifesto de dependências e lockfile do pnpm
+COPY package.json pnpm-lock.yaml ./
+
+# Instalar dependências de forma ultra-rápida e eficiente em memória
+RUN pnpm install --frozen-lockfile
 
 # Copiar todo o código-fonte
 COPY . .
 
-# Executar o build do frontend e do backend (gerando a pasta dist)
-RUN npm run build
+# Executar o build do frontend e do backend
+RUN pnpm run build
 
 # Estágio final de execução (Production Runner)
 FROM node:20-alpine AS runner
@@ -24,7 +27,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Copiar arquivos necessários para produção
-COPY package*.json ./
+COPY package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/drizzle ./drizzle
