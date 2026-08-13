@@ -123,7 +123,7 @@ function AuthScreen() {
                   <div><Label htmlFor="login-password" className="mono-label">SENHA</Label><Input id="login-password" className="field-industrial mt-2 h-12" type="password" autoComplete="current-password" value={form.password} onChange={event => setField("password", event.target.value)} /></div>
                   <Button className="h-12 w-full rounded-none bg-[#ed1c24] text-[#fff200] hover:bg-[#c9151c]" disabled={login.isPending}>{login.isPending ? "VALIDANDO..." : "ENTRAR"}<ArrowRight className="ml-2 h-4 w-4" /></Button>
                 </form>
-                <div className="mt-6 flex flex-col gap-3 text-center text-xs sm:flex-row sm:justify-between"><button className="underline underline-offset-4" onClick={() => setMode("recover")}>Esqueci minha senha</button><button className="font-semibold" onClick={() => setMode("register")}>Criar cadastro <ArrowRight className="ml-1 inline h-3 w-3" /></button></div>
+                <div className="mt-6 text-center text-xs"><button className="underline underline-offset-4" onClick={() => setMode("recover")}>Esqueci minha senha</button></div>
               </>
             )}
             {mode === "register" && (
