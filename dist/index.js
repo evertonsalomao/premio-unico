@@ -315,8 +315,7 @@ async function setSessionCookie(res, req, user) {
 }
 function clearSessionCookie(res, req) {
   res.clearCookie(APP_SESSION_COOKIE, {
-    ...getSessionCookieOptions(req),
-    maxAge: -1
+    ...getSessionCookieOptions(req)
   });
 }
 

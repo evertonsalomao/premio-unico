@@ -82,6 +82,5 @@ export async function setSessionCookie(res: Response, req: Request, user: { id: 
 export function clearSessionCookie(res: Response, req: Request) {
   res.clearCookie(APP_SESSION_COOKIE, {
     ...getSessionCookieOptions(req),
-    maxAge: -1,
   });
 }
