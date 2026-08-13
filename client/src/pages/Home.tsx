@@ -275,7 +275,7 @@ function Overview({ user, isMaster, setTab, initialSellerId }: { user: SessionUs
     doc.text(`Vendedor(a): ${sellerFilterLabel}`, 14, 28);
     doc.text(`Loja(s): ${storeFilterLabel}`, 14, 34);
     doc.text(`Total de Vendas: ${formatCurrency(data?.totalSales)} | Prêmio Total: ${formatCurrency(data?.totalReward)}`, 14, 40);
-    
+
     let y = 50;
     doc.setFont("helvetica", "bold");
     doc.text("Data", 14, y);
