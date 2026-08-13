@@ -357,13 +357,6 @@ function LensManager() {
   const save = trpc.lenses.create.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); setForm(emptyLens); toast.success("Lente cadastrada."); }, onError: err => toast.error(err.message) });
   const update = trpc.lenses.update.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); setForm(emptyLens); setEditingId(null); toast.success("Lente atualizada."); }, onError: err => toast.error(err.message) });
   const remove = trpc.lenses.delete.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); toast.success("Lente removida."); }, onError: err => toast.error(err.message) });
-  const seedDefault = trpc.lenses.seedDefault.useMutation({
-    onSuccess: async (res) => {
-      await utils.lenses.list.invalidate();
-      toast.success(`Sucesso! ${res.total} lentes foram importadas/atualizadas com os dados oficiais.`);
-    },
-    onError: err => toast.error(err.message),
-  });
   const batchImport = trpc.lenses.batchImport.useMutation({
     onSuccess: async (res) => {
       await utils.lenses.list.invalidate();
@@ -413,30 +406,16 @@ function LensManager() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between paper-block hard-shadow-sm p-5 sm:p-7">
         <div>
           <div className="section-mark text-muted-foreground">IMPORTAÇÃO EM MASSA</div>
-          <h2 className="mt-2 text-xl font-bold tracking-[-.04em]">Cadastrar 32 Lentes da Tabela Oficial</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Importe com 1 clique todas as 32 lentes oficiais da Óticas Único ou cole dados em CSV.</p>
+          <h2 className="mt-2 text-xl font-bold tracking-[-.04em]">Cadastro de Lentes via CSV</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Cole a lista em texto/CSV para cadastrar múltiplas lentes de uma só vez.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div>
           <Button
             type="button"
             className="h-11 rounded-none bg-[#ed1c24] text-[#fff200] hover:bg-[#c9151c]"
-            disabled={seedDefault.isPending}
-            onClick={() => {
-              if (window.confirm("Deseja cadastrar/atualizar automaticamente as 32 lentes oficiais da tabela da Óticas Único?")) {
-                seedDefault.mutate();
-              }
-            }}
-          >
-            {seedDefault.isPending ? "IMPORTANDO..." : "CADASTRAR AS 32 LENTES OFICIAIS"}
-            <Download className="ml-2 h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 rounded-none bg-white"
             onClick={() => setShowBatchModal(true)}
           >
-            IMPORTAR CSV PERSONALIZADO
+            IMPORTAR CSV EM MASSA
             <FileSpreadsheet className="ml-2 h-4 w-4" />
           </Button>
         </div>
