@@ -169,6 +169,29 @@ async function deleteLens(id) {
   if (!db) throw new Error("Banco de dados indispon\xEDvel");
   await db.delete(lenses).where(eq(lenses.id, id));
 }
+async function seedDefaultLenses(items) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indispon\xEDvel");
+  let count = 0;
+  for (const item of items) {
+    const existing = await db.select().from(lenses).where(and(eq(lenses.category, item.category), eq(lenses.name, item.name))).limit(1);
+    if (existing.length === 0) {
+      await db.insert(lenses).values({
+        category: item.category,
+        name: item.name,
+        rewardValue: Number(item.rewardValue).toFixed(2),
+        notes: item.notes || null
+      });
+      count++;
+    } else {
+      await db.update(lenses).set({
+        rewardValue: Number(item.rewardValue).toFixed(2),
+        notes: item.notes || null
+      }).where(eq(lenses.id, existing[0].id));
+    }
+  }
+  return count;
+}
 async function createSale(sale) {
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indispon\xEDvel");
@@ -646,6 +669,44 @@ var authRouter = router({
 // server/routers/lenses.ts
 import { TRPCError as TRPCError4 } from "@trpc/server";
 import { z as z3 } from "zod";
+
+// shared/defaultLenses.ts
+var DEFAULT_LENSES = [
+  { category: "Vis\xE3o Simples", name: "EVOLUX DIGITAL \u2013 LENTES PRONTAS", rewardValue: 5, notes: null },
+  { category: "Vis\xE3o Simples", name: "EVOLUX DIGITAL LIGHT \u2013 LENTES PRONTAS", rewardValue: 7, notes: null },
+  { category: "Vis\xE3o Simples", name: "BLUE LIGHT (FILTRO AZUL)\u2013 LENTES PRONTAS", rewardValue: 15, notes: null },
+  { category: "Vis\xE3o Simples", name: "OPTVIEW BLUE (1 ANO GARANTIA DE RISCO) - LENTES PRONTAS", rewardValue: 20, notes: null },
+  { category: "Vis\xE3o Simples", name: "CRIZAL (TODAS) \u2013 LENTES PRONTAS*", rewardValue: 10, notes: "Lentes surfa\xE7adas com Crizal n\xE3o d\xE3o pr\xEAmio." },
+  { category: "Vis\xE3o Simples", name: "TRANSITIONS COM OU SEM AR \u2013 LENTES PRONTAS", rewardValue: 10, notes: null },
+  { category: "Vis\xE3o Simples", name: "FOTO ORG\xC2NICA\u2013 LENTES PRONTAS", rewardValue: 15, notes: null },
+  { category: "Vis\xE3o Simples", name: "LENTE SOLAR COM GRAU \u2013 LENTES PRONTAS E SURF.", rewardValue: 10, notes: null },
+  { category: "Multifocal", name: "EVOLUX DIGITAL", rewardValue: 20, notes: null },
+  { category: "Multifocal", name: "EVOLUX DIGITAL COM AR", rewardValue: 35, notes: null },
+  { category: "Multifocal", name: "EVOLUX FREE FORM", rewardValue: 40, notes: null },
+  { category: "Multifocal", name: "EVOLUX FREE FORM COM AR", rewardValue: 45, notes: null },
+  { category: "Multifocal", name: "VARILUX COMFORT C/ CRIZAL", rewardValue: 15, notes: null },
+  { category: "Multifocal", name: "VARILUX COMFORT MAX C/ CRIZAL", rewardValue: 30, notes: null },
+  { category: "Multifocal", name: "VARILUX PHYSIO EXTENSEE C/ CRIZAL", rewardValue: 35, notes: null },
+  { category: "Multifocal", name: "VARILUX XR DESING C/ CRIZAL", rewardValue: 50, notes: null },
+  { category: "Promo\xE7\xE3o 2\xB0 Par 50%", name: "VARILUX COMFORT C/ CRIZAL", rewardValue: 15, notes: null },
+  { category: "Promo\xE7\xE3o 2\xB0 Par 50%", name: "VARILUX COMFORT MAX C/ CRIZAL", rewardValue: 30, notes: null },
+  { category: "Promo\xE7\xE3o 2\xB0 Par 50%", name: "VARILUX PHYSIO EXTENSEE C/ CRIZAL", rewardValue: 35, notes: null },
+  { category: "Promo\xE7\xE3o em Dobro", name: "VARILUX XR DESING C/ CRIZAL", rewardValue: 50, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Max c/ AR hiperclean SHA e hiperclean MAX", rewardValue: 35, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Max c/ AR hiperclean DUAL+ e hiperclean BLUE", rewardValue: 45, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Premier c/ AR hiperclean SHA e hiperclean MAX", rewardValue: 45, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Premier c/ AR hiperclean DUAL+ e hiperclean BLUE", rewardValue: 55, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Unique c/ AR hiperclean SHA e hiperclean MAX", rewardValue: 50, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Unique c/ AR hiperclean DUAL+ e hiperclean BLUE", rewardValue: 55, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Revolution c/ AR hiperclean SHA e hiperclean MAX", rewardValue: 55, notes: null },
+  { category: "VisionDT \u2014 Multifocais Progressivas", name: "VisionDT Revolution c/ AR hiperclean DUAL+ e hiperclean BLUE", rewardValue: 65, notes: null },
+  { category: "VisionDT \u2014 Multifocais Funcionais", name: "VisionDT Mobile c/ AR hiperclean SHA e hiperclean MAX", rewardValue: 35, notes: null },
+  { category: "VisionDT \u2014 Multifocais Funcionais", name: "VisionDT Mobile c/ AR hiperclean DUAL+ e hiperclean BLUE", rewardValue: 45, notes: null },
+  { category: "VisionDT \u2014 Multifocais Funcionais", name: "VisionDT Drive c/ AR hiperclean SHA e hiperclean MAX", rewardValue: 35, notes: null },
+  { category: "VisionDT \u2014 Multifocais Funcionais", name: "VisionDT Drive c/ AR hiperclean DUAL+ e hiperclean BLUE", rewardValue: 45, notes: "Promo\xE7\xE3o em dobro progressiva VisionDT: todos os materiais a partir do AR hiperclean SHA; o primeiro par deve ser o mais caro e o segundo par \xE9 cobrado a R$ 150,00." }
+];
+
+// server/routers/lenses.ts
 var lensInput = z3.object({
   category: z3.string().trim().min(2).max(128),
   name: z3.string().trim().min(2).max(255),
@@ -677,6 +738,14 @@ var lensesRouter = router({
   delete: adminProcedure.input(z3.object({ id: z3.number().int().positive() })).mutation(async ({ input }) => {
     await deleteLens(input.id);
     return { success: true };
+  }),
+  seedDefault: adminProcedure.mutation(async () => {
+    const count = await seedDefaultLenses(DEFAULT_LENSES);
+    return { success: true, count, total: DEFAULT_LENSES.length };
+  }),
+  batchImport: adminProcedure.input(z3.array(lensInput)).mutation(async ({ input }) => {
+    const count = await seedDefaultLenses(input);
+    return { success: true, count, total: input.length };
   })
 });
 

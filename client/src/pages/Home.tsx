@@ -351,12 +351,192 @@ function LensManager() {
   const utils = trpc.useUtils();
   const [form, setForm] = useState<LensForm>(emptyLens);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const save = trpc.lenses.create.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); setForm(emptyLens); toast.success("Lente cadastrada."); } });
-  const update = trpc.lenses.update.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); setForm(emptyLens); setEditingId(null); toast.success("Lente atualizada."); } });
-  const remove = trpc.lenses.delete.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); toast.success("Lente removida."); } });
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [rawCsvText, setRawCsvText] = useState("");
+
+  const save = trpc.lenses.create.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); setForm(emptyLens); toast.success("Lente cadastrada."); }, onError: err => toast.error(err.message) });
+  const update = trpc.lenses.update.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); setForm(emptyLens); setEditingId(null); toast.success("Lente atualizada."); }, onError: err => toast.error(err.message) });
+  const remove = trpc.lenses.delete.useMutation({ onSuccess: async () => { await utils.lenses.list.invalidate(); toast.success("Lente removida."); }, onError: err => toast.error(err.message) });
+  const seedDefault = trpc.lenses.seedDefault.useMutation({
+    onSuccess: async (res) => {
+      await utils.lenses.list.invalidate();
+      toast.success(`Sucesso! ${res.total} lentes foram importadas/atualizadas com os dados oficiais.`);
+    },
+    onError: err => toast.error(err.message),
+  });
+  const batchImport = trpc.lenses.batchImport.useMutation({
+    onSuccess: async (res) => {
+      await utils.lenses.list.invalidate();
+      setShowBatchModal(false);
+      setRawCsvText("");
+      toast.success(`${res.total} lentes importadas com sucesso!`);
+    },
+    onError: err => toast.error(err.message),
+  });
+
   const setField = (field: keyof LensForm, value: string) => setForm(previous => ({ ...previous, [field]: value }));
   const submit = (event: React.FormEvent) => { event.preventDefault(); const payload = { category: form.category, name: form.name, rewardValue: Number(form.rewardValue.replace(",", ".")), notes: form.notes }; if (editingId) update.mutate({ id: editingId, ...payload }); else save.mutate(payload); };
-  return <div className="grid gap-6 xl:grid-cols-[.68fr_1.32fr]"><section className="paper-block hard-shadow-sm p-5 sm:p-7"><div className="section-mark text-muted-foreground">CONTROLE MASTER</div><h2 className="mt-3 text-2xl font-bold tracking-[-.05em]">{editingId ? "Editar lente" : "Cadastrar lente"}</h2><p className="mt-2 text-sm text-muted-foreground">A tabela de prêmios é compartilhada com toda a equipe.</p><form className="mt-7 space-y-4" onSubmit={submit}><div><Label className="mono-label">CATEGORIA</Label><Input className="field-industrial mt-2" placeholder="Ex.: Visão Simples" value={form.category} onChange={event => setField("category", event.target.value)} /></div><div><Label className="mono-label">NOME DA LENTE</Label><Input className="field-industrial mt-2" value={form.name} onChange={event => setField("name", event.target.value)} /></div><div><Label className="mono-label">PRÊMIO UNITÁRIO (R$)</Label><Input className="field-industrial mt-2" inputMode="decimal" placeholder="0,00" value={form.rewardValue} onChange={event => setField("rewardValue", event.target.value)} /></div><div><Label className="mono-label">OBSERVAÇÃO</Label><Textarea className="field-industrial mt-2 min-h-[90px]" value={form.notes} onChange={event => setField("notes", event.target.value)} /></div><div className="flex gap-2 pt-2"><Button className="h-11 flex-1 rounded-none bg-[#ed1c24] text-[#fff200] hover:bg-[#c9151c]" disabled={save.isPending || update.isPending}>{editingId ? "ATUALIZAR" : "CADASTRAR"}<Plus className="ml-2 h-4 w-4" /></Button>{editingId && <Button type="button" variant="outline" className="h-11 rounded-none bg-white" onClick={() => { setEditingId(null); setForm(emptyLens); }}><X className="h-4 w-4" /></Button>}</div></form></section><section className="paper-block hard-shadow-sm overflow-hidden"><div className="flex items-center justify-between border-b border-[#deddd8] p-5"><div><div className="section-mark text-muted-foreground">TABELA VIGENTE</div><h2 className="mt-2 text-lg font-bold">Lentes que pagam prêmio</h2></div><Badge variant="outline" className="rounded-none">{lenses.data?.length ?? 0} itens</Badge></div><div className="max-h-[680px] overflow-auto"><table className="table-industrial w-full text-left text-sm"><thead className="sticky top-0 bg-[#f9f8f5]"><tr><th className="px-5 py-4">Categoria</th><th className="px-5 py-4">Lente</th><th className="px-5 py-4 text-right">Prêmio</th><th className="px-5 py-4 text-right">Ações</th></tr></thead><tbody>{(lenses.data ?? []).map(lens => <tr key={lens.id}><td className="px-5 py-3 text-xs text-muted-foreground">{lens.category}</td><td className="px-5 py-3 font-medium"><div>{lens.name}</div>{lens.notes && <div className="mt-1 max-w-[320px] truncate text-xs text-muted-foreground">{lens.notes}</div>}</td><td className="px-5 py-3 text-right font-bold">{formatCurrency(lens.rewardValue)}</td><td className="px-5 py-3"><div className="flex justify-end gap-1"><button className="p-2 text-muted-foreground hover:bg-[#e5e4e0] hover:text-foreground" onClick={() => { setEditingId(lens.id); setForm({ category: lens.category, name: lens.name, rewardValue: String(lens.rewardValue), notes: lens.notes ?? "" }); }} aria-label="Editar lente"><Pencil className="h-4 w-4" /></button><button className="p-2 text-muted-foreground hover:bg-[#f2d9d5] hover:text-red-700" onClick={() => { if (window.confirm("Excluir esta lente?")) remove.mutate({ id: lens.id }); }} aria-label="Excluir lente"><Trash2 className="h-4 w-4" /></button></div></td></tr>)}</tbody></table></div></section></div>;
+
+  const handleCustomCsvImport = () => {
+    if (!rawCsvText.trim()) return toast.error("Cole o conteúdo CSV para importar.");
+    const lines = rawCsvText.split("\n").filter(l => l.trim().length > 0);
+    const parsed: { category: string; name: string; rewardValue: number; notes?: string }[] = [];
+
+    for (const line of lines) {
+      const parts = line.split(";").map(p => p.trim());
+      if (parts.length >= 4) {
+        let category = parts[1];
+        let name = parts[2];
+        let valStr = parts[3];
+        let notes = parts[4] || "";
+
+        if (isNaN(Number(parts[0])) && parts.length === 4) {
+          category = parts[0];
+          name = parts[1];
+          valStr = parts[2];
+          notes = parts[3];
+        }
+
+        const val = Number(valStr.replace("R$", "").replace(",", ".").trim());
+        if (category && name && !isNaN(val)) {
+          parsed.push({ category, name, rewardValue: val, notes: notes || undefined });
+        }
+      }
+    }
+
+    if (parsed.length === 0) return toast.error("Formato inválido. Use a estrutura: Categoria;Nome;Prêmio;Observação");
+    batchImport.mutate(parsed);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between paper-block hard-shadow-sm p-5 sm:p-7">
+        <div>
+          <div className="section-mark text-muted-foreground">IMPORTAÇÃO EM MASSA</div>
+          <h2 className="mt-2 text-xl font-bold tracking-[-.04em]">Cadastrar 32 Lentes da Tabela Oficial</h2>
+          <p className="mt-1 text-xs text-muted-foreground">Importe com 1 clique todas as 32 lentes oficiais da Óticas Único ou cole dados em CSV.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            className="h-11 rounded-none bg-[#ed1c24] text-[#fff200] hover:bg-[#c9151c]"
+            disabled={seedDefault.isPending}
+            onClick={() => {
+              if (window.confirm("Deseja cadastrar/atualizar automaticamente as 32 lentes oficiais da tabela da Óticas Único?")) {
+                seedDefault.mutate();
+              }
+            }}
+          >
+            {seedDefault.isPending ? "IMPORTANDO..." : "CADASTRAR AS 32 LENTES OFICIAIS"}
+            <Download className="ml-2 h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 rounded-none bg-white"
+            onClick={() => setShowBatchModal(true)}
+          >
+            IMPORTAR CSV PERSONALIZADO
+            <FileSpreadsheet className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {showBatchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="paper-block hard-shadow w-full max-w-2xl p-6">
+            <div className="flex items-center justify-between border-b border-[#deddd8] pb-4">
+              <h3 className="text-lg font-bold">Importar Lentes via CSV / Texto</h3>
+              <button type="button" onClick={() => setShowBatchModal(false)} className="p-1 text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Cole as linhas separadas por ponto e vírgula (<code>;</code>):<br />
+                <code>ID;Categoria;Nome da lente;Premiação;Observações</code>
+              </p>
+              <Textarea
+                className="field-industrial h-64 font-mono text-xs"
+                placeholder="1;Visão Simples;EVOLUX DIGITAL – LENTES PRONTAS;5.0;"
+                value={rawCsvText}
+                onChange={e => setRawCsvText(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" className="rounded-none" onClick={() => setShowBatchModal(false)}>Cancelar</Button>
+                <Button
+                  type="button"
+                  className="rounded-none bg-[#ed1c24] text-[#fff200] hover:bg-[#c9151c]"
+                  disabled={batchImport.isPending}
+                  onClick={handleCustomCsvImport}
+                >
+                  {batchImport.isPending ? "IMPORTANDO..." : "PROCESSAR E SALVAR"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid gap-6 xl:grid-cols-[.68fr_1.32fr]">
+        <section className="paper-block hard-shadow-sm p-5 sm:p-7">
+          <div className="section-mark text-muted-foreground">CONTROLE MASTER</div>
+          <h2 className="mt-3 text-2xl font-bold tracking-[-.05em]">{editingId ? "Editar lente" : "Cadastrar lente"}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">A tabela de prêmios é compartilhada com toda a equipe.</p>
+          <form className="mt-7 space-y-4" onSubmit={submit}>
+            <div><Label className="mono-label">CATEGORIA</Label><Input className="field-industrial mt-2" placeholder="Ex.: Visão Simples" value={form.category} onChange={event => setField("category", event.target.value)} /></div>
+            <div><Label className="mono-label">NOME DA LENTE</Label><Input className="field-industrial mt-2" value={form.name} onChange={event => setField("name", event.target.value)} /></div>
+            <div><Label className="mono-label">PRÊMIO UNITÁRIO (R$)</Label><Input className="field-industrial mt-2" inputMode="decimal" placeholder="0,00" value={form.rewardValue} onChange={event => setField("rewardValue", event.target.value)} /></div>
+            <div><Label className="mono-label">OBSERVAÇÃO</Label><Textarea className="field-industrial mt-2 min-h-[90px]" value={form.notes} onChange={event => setField("notes", event.target.value)} /></div>
+            <div className="flex gap-2 pt-2">
+              <Button className="h-11 flex-1 rounded-none bg-[#ed1c24] text-[#fff200] hover:bg-[#c9151c]" disabled={save.isPending || update.isPending}>{editingId ? "ATUALIZAR" : "CADASTRAR"}<Plus className="ml-2 h-4 w-4" /></Button>
+              {editingId && <Button type="button" variant="outline" className="h-11 rounded-none bg-white" onClick={() => { setEditingId(null); setForm(emptyLens); }}><X className="h-4 w-4" /></Button>}
+            </div>
+          </form>
+        </section>
+
+        <section className="paper-block hard-shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#deddd8] p-5">
+            <div>
+              <div className="section-mark text-muted-foreground">TABELA VIGENTE</div>
+              <h2 className="mt-2 text-lg font-bold">Lentes que pagam prêmio</h2>
+            </div>
+            <Badge variant="outline" className="rounded-none">{lenses.data?.length ?? 0} itens</Badge>
+          </div>
+          <div className="max-h-[680px] overflow-auto">
+            <table className="table-industrial w-full text-left text-sm">
+              <thead className="sticky top-0 bg-[#f9f8f5]">
+                <tr>
+                  <th className="px-5 py-4">Categoria</th>
+                  <th className="px-5 py-4">Lente</th>
+                  <th className="px-5 py-4 text-right">Prêmio</th>
+                  <th className="px-5 py-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(lenses.data ?? []).map(lens => (
+                  <tr key={lens.id}>
+                    <td className="px-5 py-3 text-xs text-muted-foreground">{lens.category}</td>
+                    <td className="px-5 py-3 font-medium">
+                      <div>{lens.name}</div>
+                      {lens.notes && <div className="mt-1 max-w-[320px] truncate text-xs text-muted-foreground">{lens.notes}</div>}
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold">{formatCurrency(lens.rewardValue)}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex justify-end gap-1">
+                        <button className="p-2 text-muted-foreground hover:bg-[#e5e4e0] hover:text-foreground" onClick={() => { setEditingId(lens.id); setForm({ category: lens.category, name: lens.name, rewardValue: String(lens.rewardValue), notes: lens.notes ?? "" }); }} aria-label="Editar lente"><Pencil className="h-4 w-4" /></button>
+                        <button className="p-2 text-muted-foreground hover:bg-[#f2d9d5] hover:text-red-700" onClick={() => { if (window.confirm("Excluir esta lente?")) remove.mutate({ id: lens.id }); }} aria-label="Excluir lente"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 function TeamManager({ onViewReport }: { onViewReport: (sellerId: number) => void }) {

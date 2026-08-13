@@ -109,6 +109,30 @@ export async function deleteLens(id: number) {
   await db.delete(lenses).where(eq(lenses.id, id));
 }
 
+export async function seedDefaultLenses(items: { category: string; name: string; rewardValue: number | string; notes?: string | null }[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Banco de dados indisponível");
+  let count = 0;
+  for (const item of items) {
+    const existing = await db.select().from(lenses).where(and(eq(lenses.category, item.category), eq(lenses.name, item.name))).limit(1);
+    if (existing.length === 0) {
+      await db.insert(lenses).values({
+        category: item.category,
+        name: item.name,
+        rewardValue: Number(item.rewardValue).toFixed(2),
+        notes: item.notes || null,
+      });
+      count++;
+    } else {
+      await db.update(lenses).set({
+        rewardValue: Number(item.rewardValue).toFixed(2),
+        notes: item.notes || null,
+      }).where(eq(lenses.id, existing[0].id));
+    }
+  }
+  return count;
+}
+
 export async function createSale(sale: InsertSale) {
   const db = await getDb();
   if (!db) throw new Error("Banco de dados indisponível");

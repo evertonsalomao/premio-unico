@@ -3,6 +3,8 @@ import { z } from "zod";
 import { adminProcedure, protectedProcedure, router } from "../_core/trpc";
 import * as db from "../db";
 
+import { DEFAULT_LENSES } from "../../shared/defaultLenses";
+
 const lensInput = z.object({
   category: z.string().trim().min(2).max(128),
   name: z.string().trim().min(2).max(255),
@@ -38,5 +40,15 @@ export const lensesRouter = router({
   delete: adminProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => {
     await db.deleteLens(input.id);
     return { success: true } as const;
+  }),
+
+  seedDefault: adminProcedure.mutation(async () => {
+    const count = await db.seedDefaultLenses(DEFAULT_LENSES);
+    return { success: true, count, total: DEFAULT_LENSES.length };
+  }),
+
+  batchImport: adminProcedure.input(z.array(lensInput)).mutation(async ({ input }) => {
+    const count = await db.seedDefaultLenses(input);
+    return { success: true, count, total: input.length };
   }),
 });
